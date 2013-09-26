@@ -143,7 +143,11 @@ public class ECCardInfosActivity extends Activity {
 			} else 	if (new String(transceive("00 A4 04 0C 07 A0 00 00 00 04 10 10"), "ISO-8859-1").contains("MasterCard")) {	// MasterCard
 				cardtype.setText("MasterCard");
 				readKreditkarte();
-				
+			} else 	if (new String(transceive("00 a4 04 00 0e 32 50 41 59 2e 53 59 53 2e 44 44 46 30 31 00")).length() > 2) {
+				cardtype.setText("MasterCard");
+				String[] init = { "00 a4 04 00 07 a0 00 00 00 04 10 10 00", "80 a8 00 00 02 83 00 00" };
+				readKreditkarte(init);
+
 				// Now following: AIDs I never tried until now - perhaps they work, possibly not
 			} else if (new String(transceive("00 A4 04 0C 07 A0 00 00 00 03 10 10"), "ISO-8859-1").length() > 2) {
 				cardtype.setText("Visa");
@@ -226,9 +230,17 @@ public class ECCardInfosActivity extends Activity {
 		}
 		return sb.toString();
 	}
-	
+
 	private void readKreditkarte() {
+		readKreditkarte(new String[] {});
+	}
+
+	private void readKreditkarte(String[] init) {
 		try {
+			/* transmit additional commands to the card */
+			for (String cmd : init) {
+				transceive(cmd);
+			}
 			byte[] recv = transceive("00 B2 01 0C 00");
 
 			int ccnr_start = -1;
