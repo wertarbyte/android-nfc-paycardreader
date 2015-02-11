@@ -215,6 +215,17 @@ public class ECCardInfosActivity extends Activity {
 			toastError(getResources().getText(R.string.error_nfc_comm_cont) + (e.getMessage() != null ? e.getMessage() : "-"));			
 		}
 	}
+
+	private String formatKKNr(String nr) {
+		StringBuilder sb = new StringBuilder();
+		for (int i=0; i<nr.length(); i++) {
+			if (i > 0 && i%4 == 0) {
+				sb.append(' ');
+			}
+			sb.append(nr.charAt(i));
+		}
+		return sb.toString();
+	}
 	
 	private void readKreditkarte() {
 		try {
@@ -248,8 +259,8 @@ public class ECCardInfosActivity extends Activity {
 
 			Log.d("CardInfo", "RESULT: "+new String(recv));
 			String kkstr = new String(Arrays.copyOfRange(recv, ccnr_start, ccnr_end), "ISO-8859-1");
-			kknr.setText(kkstr);
 
+			kknr.setText(formatKKNr(kkstr));
 			verfall.setText(
 					new String(Arrays.copyOfRange(recv, exp_offset+2, exp_offset+4), "ISO-8859-1")
 					.concat("/")
