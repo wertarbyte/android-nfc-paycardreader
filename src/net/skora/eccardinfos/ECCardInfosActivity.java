@@ -219,11 +219,41 @@ public class ECCardInfosActivity extends Activity {
 	private void readKreditkarte() {
 		try {
 			byte[] recv = transceive("00 B2 01 0C 00");
-			kknr.setText(new String(Arrays.copyOfRange(recv, 29, 45), "ISO-8859-1"));
+
+			int ccnr_start = -1;
+			int ccnr_end = -1;
+
+			int holder_start = -1;
+			int holder_end = -1;
+			int exp_offset = -1;
+
+			/* try to locate the 'B' indicating the format followed by the card number and '^' */
+			for(int i = 0; i < (recv.length-16); i++) {
+				if (recv[i] == 'B' && recv[i+16+1] == '^') {
+					ccnr_start = i+1;
+					ccnr_end = i+16;
+					break;
+				}
+			}
+			if (ccnr_start < 0 ) return;
+
+			holder_start = ccnr_end+2;
+			for(int i = holder_start; i < (recv.length); i++) {
+				if (recv[i] == '^') {
+					holder_end = i-1;
+					break;
+				}
+			}
+			exp_offset = holder_end+2;
+
+			Log.d("CardInfo", "RESULT: "+new String(recv));
+			String kkstr = new String(Arrays.copyOfRange(recv, ccnr_start, ccnr_end), "ISO-8859-1");
+			kknr.setText(kkstr);
+
 			verfall.setText(
-					new String(Arrays.copyOfRange(recv, 75, 77), "ISO-8859-1")
+					new String(Arrays.copyOfRange(recv, exp_offset+2, exp_offset+4), "ISO-8859-1")
 					.concat("/")
-					.concat(new String(Arrays.copyOfRange(recv, 73, 75), "ISO-8859-1"))
+					.concat(new String(Arrays.copyOfRange(recv, exp_offset, exp_offset+2), "ISO-8859-1"))
 					);
 		} catch (IOException e) {
 			toastError(getResources().getText(R.string.error_nfc_comm_cont) + (e.getMessage() != null ? e.getMessage() : "-"));
